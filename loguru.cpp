@@ -199,6 +199,7 @@ namespace loguru
 	// For periodic flushing:
 	static std::thread* s_flush_thread   = nullptr;
 	static bool         s_needs_flushing = false;
+    static bool         s_needs_exit = false;
 
 	static const bool s_terminal_has_color = [](){
 		#ifdef _WIN32
@@ -619,6 +620,13 @@ namespace loguru
 	void shutdown()
 	{
 		VLOG_F(g_internal_verbosity, "loguru::shutdown()");
+        s_needs_exit = true;
+        if (s_flush_thread) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(g_flush_interval_ms));
+            s_flush_thread->detach();
+            delete s_flush_thread;
+            s_flush_thread = nullptr;
+        }
 		remove_all_callbacks();
 		set_fatal_handler(nullptr);
 		set_verbosity_to_name_callback(nullptr);
@@ -1295,6 +1303,9 @@ namespace loguru
 				for (;;) {
 					if (s_needs_flushing) {
 						flush();
+					}
+					if (s_needs_exit) {
+						break;
 					}
 					std::this_thread::sleep_for(std::chrono::milliseconds(g_flush_interval_ms));
 				}
