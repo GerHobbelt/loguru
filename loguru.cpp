@@ -622,7 +622,8 @@ namespace loguru
 		VLOG_F(g_internal_verbosity, "loguru::shutdown()");
         s_needs_exit = true;
         if (s_flush_thread) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(g_flush_interval_ms));
+			flush();
+            std::this_thread::sleep_for(std::chrono::milliseconds(g_flush_interval_ms*2));
             s_flush_thread->detach();
             delete s_flush_thread;
             s_flush_thread = nullptr;
