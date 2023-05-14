@@ -52,6 +52,7 @@
 
 #ifdef _WIN32
 	#include <direct.h>
+	#include <share.h>
 
 	#define localtime_r(a, b) localtime_s(b, a) // No localtime_r with MSVC, but arguments are swapped for localtime_s
 #else
@@ -127,6 +128,9 @@
 		#define _WIN32_WINNT 0x0502
 	#endif
 	#define WIN32_LEAN_AND_MEAN
+	#ifdef NOMINMAX
+	#undef NOMINMAX
+	#endif
 	#define NOMINMAX
 	#include <windows.h>
 #endif
