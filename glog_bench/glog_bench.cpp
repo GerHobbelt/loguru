@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <glog/logging.h>
+#include <gflags/gflags.h>
 #include <glog/raw_logging.h>
 
 const size_t kNumIterations = 50 * 1000;
@@ -78,10 +79,10 @@ void raw_string_float()
 	google::FlushLogFiles(google::GLOG_INFO);
 }
 
-int main(int argc, char* argv[])
+int main(int argc, const char** argv)
 {
     FLAGS_alsologtostderr = true;
-    google::ParseCommandLineFlags(&argc, &argv, true);
+	gflags::ParseCommandLineFlags(&argc, &argv, true);
     google::InitGoogleLogging(argv[0]);
 
     bench("LOG(WARNING) << string (buffered):", stream_strings);

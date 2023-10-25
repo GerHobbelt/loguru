@@ -1,11 +1,13 @@
 #include <iostream>
+#include <gflags/gflags.h>
+
 #include "glog_example.hpp"
 
-int main(int argc, char* argv[])
+int main(int argc, const char** argv)
 {
     FLAGS_alsologtostderr = true;
     FLAGS_colorlogtostderr = true;
-    google::ParseCommandLineFlags(&argc, &argv, true);
+	gflags::ParseCommandLineFlags(&argc, &argv, true);
     google::InitGoogleLogging(argv[0]);
     LOG(INFO) << "Hello from main.cpp!";
     complex_calculation();
