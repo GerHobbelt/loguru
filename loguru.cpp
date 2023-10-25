@@ -602,7 +602,7 @@ namespace loguru
 
 		s_argv0_filename = filename(argv[0]);
 
-		#ifdef _WIN32
+		#if defined(_WIN32) && !defined(getcwd)
 			#define getcwd _getcwd
 		#endif
 
