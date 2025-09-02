@@ -343,7 +343,7 @@ int main(int argc, char* argv[])
 	{
 		loguru::add_file("latest_readable.log", loguru::Truncate, loguru::Verbosity_INFO);
 		loguru::add_file("everything.log",      loguru::Append,   loguru::Verbosity_MAX);
-#ifdef LOGURU_SYSLOG
+#if LOGURU_SYSLOG
 		loguru::add_syslog("loguru_test",       loguru::Verbosity_MAX);
 #endif
 
