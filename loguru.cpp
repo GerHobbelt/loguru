@@ -52,6 +52,7 @@
 
 #ifdef _WIN32
 	#include <direct.h>
+	#include <share.h>
 
 	#define localtime_r(a, b) localtime_s(b, a) // No localtime_r with MSVC, but arguments are swapped for localtime_s
 #else
@@ -127,6 +128,9 @@
 		#define _WIN32_WINNT 0x0502
 	#endif
 	#define WIN32_LEAN_AND_MEAN
+	#ifdef NOMINMAX
+	#undef NOMINMAX
+	#endif
 	#define NOMINMAX
 	#include <windows.h>
 #endif
@@ -1320,7 +1324,7 @@ namespace loguru
 			file = filename(file);
 		}
 
-		char level_buff[6];
+		char level_buff[7];
 		const char* custom_level_name = get_verbosity_name(verbosity);
 		if (custom_level_name) {
 			snprintf(level_buff, sizeof(level_buff) - 1, "%s", custom_level_name);

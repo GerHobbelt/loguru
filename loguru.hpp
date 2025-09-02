@@ -199,13 +199,8 @@ Website: www.ilikebigbits.com
 #endif
 #endif
 
-#ifdef LOGURU_USE_ANONYMOUS_NAMESPACE
-	#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN namespace {
-	#define LOGURU_ANONYMOUS_NAMESPACE_END }
-#else
-	#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN
-	#define LOGURU_ANONYMOUS_NAMESPACE_END
-#endif
+#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN
+#define LOGURU_ANONYMOUS_NAMESPACE_END
 
 // --------------------------------------------------------------------
 // Utility macros
