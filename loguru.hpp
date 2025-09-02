@@ -57,6 +57,7 @@ Website: www.ilikebigbits.com
 	* Version 2.0.0 - 2018-09-22 - Split loguru.hpp into loguru.hpp and loguru.cpp
 	* Version 2.1.0 - 2019-09-23 - Update fmtlib + add option to loguru::init to NOT set main thread name.
 	* Version 2.2.0 - 2020-07-31 - Replace LOGURU_CATCH_SIGABRT with struct SignalOptions
+	*                 2023-08-13 - fix PVS Studio warnings (change by DOSBox Staging Team)
 
 # Compiling
 	Just include <loguru.hpp> where you want to use Loguru.
@@ -176,7 +177,7 @@ Website: www.ilikebigbits.com
 #endif
 
 #ifndef LOGURU_USE_LOCALE
-        #define LOGURU_USE_LOCALE 0
+	#define LOGURU_USE_LOCALE 0
 #endif
 
 #ifndef LOGURU_WITH_FILEABS
@@ -199,8 +200,13 @@ Website: www.ilikebigbits.com
 #endif
 #endif
 
-#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN
-#define LOGURU_ANONYMOUS_NAMESPACE_END
+#ifdef LOGURU_USE_ANONYMOUS_NAMESPACE
+	#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN namespace {
+	#define LOGURU_ANONYMOUS_NAMESPACE_END }
+#else
+	#define LOGURU_ANONYMOUS_NAMESPACE_BEGIN
+	#define LOGURU_ANONYMOUS_NAMESPACE_END
+#endif
 
 // --------------------------------------------------------------------
 // Utility macros
@@ -691,12 +697,12 @@ namespace loguru
 		LogScopeRAII& operator=(const LogScopeRAII&) = delete;
 		void operator=(LogScopeRAII&&) = delete;
 
-		Verbosity   _verbosity;
-		const char* _file; // Set to null if we are disabled due to verbosity
-		unsigned    _line;
-		bool        _indent_stderr; // Did we?
-		long long   _start_time_ns;
-		char        _name[LOGURU_SCOPE_TEXT_SIZE];
+		Verbosity   _verbosity = Verbosity_INVALID;
+		const char* _file = nullptr; // Set to null if we are disabled due to verbosity
+		unsigned    _line = 0;
+		bool        _indent_stderr = false; // Did we?
+		long long   _start_time_ns = 0;
+		char        _name[LOGURU_SCOPE_TEXT_SIZE] = {};
 	};
 
 	// Marked as 'noreturn' for the benefit of the static analyzer and optimizer.
@@ -722,24 +728,24 @@ namespace loguru
 	LOGURU_EXPORT
 	void flush();
 
-	template<class T> inline Text format_value(const T&)                    { return textprintf("N/A");     }
-	template<>        inline Text format_value(const char& v)               { return textprintf(LOGURU_FMT(c),   v); }
-	template<>        inline Text format_value(const int& v)                { return textprintf(LOGURU_FMT(d),   v); }
-	template<>        inline Text format_value(const float& v)              { return textprintf(LOGURU_FMT(f),   v); }
-	template<>        inline Text format_value(const double& v)             { return textprintf(LOGURU_FMT(f),   v); }
+	template<class T> inline Text format_value(const T)                     { return textprintf("N/A");     }
+	template<>        inline Text format_value(const char v)                { return textprintf(LOGURU_FMT(c),   v); }
+	template<>        inline Text format_value(const int v)                 { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const float v)               { return textprintf(LOGURU_FMT(f),   v); }
+	template<>        inline Text format_value(const double v)              { return textprintf(LOGURU_FMT(f),   v); }
 
 #if LOGURU_USE_FMTLIB
-	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(d), v); }
-	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(d), v); }
+	template<>        inline Text format_value(const unsigned int v)        { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const long v)                { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const unsigned long v)       { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const long long v)           { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const unsigned long long v)  { return textprintf(LOGURU_FMT(d),   v); }
 #else
-	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(u),   v); }
-	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(lu),  v); }
-	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(ld),  v); }
-	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(llu), v); }
-	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(lld), v); }
+	template<>        inline Text format_value(const unsigned int v)        { return textprintf(LOGURU_FMT(u),   v); }
+	template<>        inline Text format_value(const long v)                { return textprintf(LOGURU_FMT(lu),  v); }
+	template<>        inline Text format_value(const unsigned long v)       { return textprintf(LOGURU_FMT(ld),  v); }
+	template<>        inline Text format_value(const long long v)           { return textprintf(LOGURU_FMT(llu), v); }
+	template<>        inline Text format_value(const unsigned long long v)  { return textprintf(LOGURU_FMT(lld), v); }
 #endif
 
 	/* Thread names can be set for the benefit of readable logs.
@@ -846,7 +852,7 @@ namespace loguru
 	{
 	public:
 		EcEntryBase(const char* file, unsigned line, const char* descr);
-		~EcEntryBase();
+		virtual ~EcEntryBase();
 		EcEntryBase(const EcEntryBase&) = delete;
 		EcEntryBase(EcEntryBase&&) = delete;
 		EcEntryBase& operator=(const EcEntryBase&) = delete;
@@ -860,7 +866,7 @@ namespace loguru
 		const char*  _file;
 		unsigned     _line;
 		const char*  _descr;
-		EcEntryBase* _previous;
+		EcEntryBase* _previous = nullptr;
 	};
 
 	template<typename T>
