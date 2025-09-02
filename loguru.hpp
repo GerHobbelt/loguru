@@ -176,6 +176,10 @@ Website: www.ilikebigbits.com
 	#define LOGURU_USE_FMTLIB 0
 #endif
 
+#ifndef LOGURU_USE_STD_FORMAT
+	#define LOGURU_USE_STD_FORMAT 0
+#endif
+
 #ifndef LOGURU_USE_LOCALE
 	#define LOGURU_USE_LOCALE 0
 #endif
@@ -250,6 +254,9 @@ Website: www.ilikebigbits.com
 
 #if LOGURU_USE_FMTLIB
 	#include <fmt/format.h>
+	#define LOGURU_FMT(x) "{}"
+#elif LOGURU_USE_STD_FORMAT
+	#include <format>
 	#define LOGURU_FMT(x) "{:" #x "}"
 #else
 	#define LOGURU_FMT(x) "%" #x
@@ -306,6 +313,15 @@ namespace loguru
 	LOGURU_EXPORT
 	Text textprintf(LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
 		return vtextprintf(format, fmt::make_format_args(args...));
+	}
+#elif LOGURU_USE_STD_FORMAT
+	LOGURU_EXPORT
+	Text vtextprintf(const char* format, std::format_args args);
+
+	template<typename... Args>
+	LOGURU_EXPORT
+	Text textprintf(LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
+		return vtextprintf(format, std::make_format_args(args...));
 	}
 #else
 	LOGURU_EXPORT
@@ -646,6 +662,26 @@ namespace loguru
 	void raw_log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args &... args) {
 	    raw_vlog(verbosity, file, line, format, fmt::make_format_args(args...));
 	}
+#elif LOGURU_USE_STD_FORMAT
+	// Internal functions
+    LOGURU_EXPORT
+	void vlog(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, std::format_args args);
+    LOGURU_EXPORT
+	void raw_vlog(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, std::format_args args);
+
+	// Actual logging function. Use the LOG macro instead of calling this directly.
+	template <typename... Args>
+	LOGURU_EXPORT
+	void log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args &... args) {
+	    vlog(verbosity, file, line, format, std::make_format_args(args...));
+	}
+
+	// Log without any preamble or indentation.
+	template <typename... Args>
+	LOGURU_EXPORT
+	void raw_log(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args &... args) {
+	    raw_vlog(verbosity, file, line, format, std::make_format_args(args...));
+	}
 #else // LOGURU_USE_FMTLIB?
 	// Actual logging function. Use the LOG macro instead of calling this directly.
 	LOGURU_EXPORT
@@ -714,6 +750,14 @@ namespace loguru
 	LOGURU_EXPORT
 	LOGURU_NORETURN void log_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
 	    vlog_and_abort(stack_trace_skip, expr, file, line, format, fmt::make_format_args(args...));
+	}
+#elif LOGURU_USE_STD_FORMAT
+	LOGURU_EXPORT
+	LOGURU_NORETURN void vlog_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, std::format_args);
+	template <typename... Args>
+	LOGURU_EXPORT
+	LOGURU_NORETURN void log_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args&... args) {
+	    vlog_and_abort(stack_trace_skip, expr, file, line, format, std::make_format_args(args...));
 	}
 #else
 	LOGURU_EXPORT

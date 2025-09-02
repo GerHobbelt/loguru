@@ -431,6 +431,11 @@ namespace loguru
 	{
 		return Text(STRDUP(fmt::vformat(format, args).c_str()));
 	}
+#elif LOGURU_USE_STD_FORMAT
+	Text vtextprintf(const char* format, std::format_args args)
+	{
+		return Text(STRDUP(std::vformat(format, args).c_str()));
+	}
 #else
 	LOGURU_PRINTF_LIKE(1, 0)
 	static Text vtextprintf(const char* format, va_list vlist)
@@ -1596,6 +1601,19 @@ namespace loguru
 		auto message = Message{verbosity, file, line, "", "", "", formatted.c_str()};
 		log_message(1, message, false, true);
 	}
+#elif LOGURU_USE_STD_FORMAT
+	void vlog(Verbosity verbosity, const char* file, unsigned line, const char* format, std::format_args args)
+	{
+		auto formatted = std::vformat(format, args);
+		log_to_everywhere(1, verbosity, file, line, "", formatted.c_str());
+	}
+
+	void raw_vlog(Verbosity verbosity, const char* file, unsigned line, const char* format, std::format_args args)
+	{
+		auto formatted = std::vformat(format, args);
+		auto message = Message{verbosity, file, line, "", "", "", formatted.c_str()};
+		log_message(1, message, false, true);
+	}
 #else
 	void log(Verbosity verbosity, const char* file, unsigned line, const char* format, ...)
 	{
@@ -1710,6 +1728,13 @@ namespace loguru
 		log_to_everywhere(stack_trace_skip + 1, Verbosity_FATAL, file, line, expr, formatted.c_str());
 		abort(); // log_to_everywhere already does this, but this makes the analyzer happy.
 	}
+#elif LOGURU_USE_STD_FORMAT
+	void vlog_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, const char* format, std::format_args args)
+	{
+		auto formatted = std::vformat(format, args);
+		log_to_everywhere(stack_trace_skip + 1, Verbosity_FATAL, file, line, expr, formatted.c_str());
+		abort(); // log_to_everywhere already does this, but this makes the analyzer happy.
+	}
 #else
 	void log_and_abort(int stack_trace_skip, const char* expr, const char* file, unsigned line, const char* format, ...)
 	{
@@ -1730,7 +1755,7 @@ namespace loguru
 	// ----------------------------------------------------------------------------
 	// Streams:
 
-#if LOGURU_USE_FMTLIB
+#if LOGURU_USE_FMTLIB || LOGURU_USE_STD_FORMAT
 	template<typename... Args>
 	std::string vstrprintf(const char* format, const Args&... args)
 	{
@@ -1864,7 +1889,7 @@ namespace loguru
 			result.str += "------------------------------------------------\n";
 			for (auto entry : stack) {
 				const auto description = std::string(entry->_descr) + ":";
-#if LOGURU_USE_FMTLIB
+#if LOGURU_USE_FMTLIB || LOGURU_USE_STD_FORMAT
 				auto prefix = textprintf("[ErrorContext] {.{}s}:{:-5u} {:-20s} ",
 					filename(entry->_file), LOGURU_FILENAME_WIDTH, entry->_line, description.c_str());
 #else
