@@ -1260,47 +1260,60 @@ namespace loguru
 		if (out_buff_size == 0) { return; }
 		out_buff[0] = '\0';
 		size_t pos = 0;
-		if (g_preamble_date && pos < out_buff_size) {
+		bool fault = false;
+		if (g_preamble_date) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "date       ");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_time && pos < out_buff_size) {
+		if (g_preamble_time && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "time         ");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_uptime && pos < out_buff_size) {
+		if (g_preamble_uptime && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "( uptime  ) ");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_thread && pos < out_buff_size) {
+		if (g_preamble_thread && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "[%-*s]", LOGURU_THREADNAME_WIDTH, " thread name/id");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_file && pos < out_buff_size) {
+		if (g_preamble_file && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%*s:line  ", LOGURU_FILENAME_WIDTH, "file");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_verbose && pos < out_buff_size) {
+		if (g_preamble_verbose && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "   v");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_pipe && pos < out_buff_size) {
+		if (g_preamble_pipe && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
+		}
+
+		if (fault) {
+			out_buff[0] = 0;
+			assert(false && "Should never get here!");
 		}
 	}
 
@@ -1324,65 +1337,86 @@ namespace loguru
 			file = filename(file);
 		}
 
-		char level_buff[7];
+		char level_buff[8];
+		bool fault = false;
+	{
 		const char* custom_level_name = get_verbosity_name(verbosity);
+		int bytes;
 		if (custom_level_name) {
-			snprintf(level_buff, sizeof(level_buff), "%s", custom_level_name);
+			bytes = snprintf(level_buff, sizeof(level_buff), "%s", custom_level_name);
 		} else {
-			snprintf(level_buff, sizeof(level_buff), "% 4d", static_cast<int8_t>(verbosity));
+			bytes = snprintf(level_buff, sizeof(level_buff), "% 4d", static_cast<int8_t>(verbosity));
 		}
+		fault = fault || (bytes <= 0) || (bytes >= sizeof(level_buff));
+		if (fault) {
+			level_buff[0] = 0;
+			assert(false && "Should never get here!");
+		}
+	}			
 
 		size_t pos = 0;
 
-		if (g_preamble_date && pos < out_buff_size) {
+		if (g_preamble_date) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%04d-%02d-%02d ",
 				                 1900 + time_info.tm_year, 1 + time_info.tm_mon, time_info.tm_mday);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_time && pos < out_buff_size) {
+		if (g_preamble_time && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%02d:%02d:%02d.%03lld ",
 			                     time_info.tm_hour, time_info.tm_min, time_info.tm_sec, ms_since_epoch % 1000);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_uptime && pos < out_buff_size) {
+		if (g_preamble_uptime && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "(%8.3fs) ",
 			                     uptime_sec);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_thread && pos < out_buff_size) {
+		if (g_preamble_thread && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "[%-*s]",
 			                     LOGURU_THREADNAME_WIDTH, thread_name);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_file && pos < out_buff_size) {
+		if (g_preamble_file && !fault) {
 			char shortened_filename[LOGURU_FILENAME_WIDTH + 1];
 			snprintf(shortened_filename, LOGURU_FILENAME_WIDTH + 1, "%s", file);
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%*s:%-5u ",
 			                     LOGURU_FILENAME_WIDTH, shortened_filename, line);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_verbose && pos < out_buff_size) {
+		if (g_preamble_verbose && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%4s",
 			                     level_buff);
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
 		}
-		if (g_preamble_pipe && pos < out_buff_size) {
+		if (g_preamble_pipe && !fault) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
-			if (bytes > 0) {
+			fault = fault || (bytes <= 0) || (pos + bytes >= out_buff_size);
+			if (!fault) {
 				pos += bytes;
 			}
+		}
+
+		if (fault) {
+			out_buff[0] = 0;
+			assert(false && "Should never get here!");
 		}
 	}
 
