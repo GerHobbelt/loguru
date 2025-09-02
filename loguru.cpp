@@ -482,7 +482,7 @@ namespace loguru
 				last_is_alpha = std::isalpha(static_cast<int>(cmd[arg_len]));
 			}
 			#else
-			last_is_alpha = std::isalpha(static_cast<int>(cmd[arg_len]));
+			last_is_alpha = !!std::isalpha(static_cast<int>(cmd[arg_len]));
 			#endif
 
 			if (strncmp(cmd, verbosity_flag, arg_len) == 0 && !last_is_alpha) {
