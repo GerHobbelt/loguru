@@ -515,7 +515,7 @@ namespace loguru
 		You can you something other than the -v flag by setting the verbosity_flag option.
 	*/
 	LOGURU_EXPORT
-	void init(int& argc, char* argv[], const Options& options = {});
+	void init(int& argc, const char** argv, const Options& options = {});
 
 	// Will call remove_all_callbacks(). After calling this, logging will still go to stderr.
 	// You generally don't need to call this.
@@ -554,7 +554,7 @@ namespace loguru
 
 	// Helper: thread-safe version strerror
 	LOGURU_EXPORT
-	Text errno_as_text();
+	Text errno_as_text(void);
 
 	/* Given a prefix of e.g. "~/loguru/" this might return
 	   "/home/your_username/loguru/app_name/20151017_161503.123.log"
@@ -636,11 +636,11 @@ namespace loguru
 
 	// Shut down all file logging and any other callback hooks installed.
 	LOGURU_EXPORT
-	void remove_all_callbacks();
+	void remove_all_callbacks(void);
 
 	// Returns the maximum of g_stderr_verbosity and all file/custom outputs.
 	LOGURU_EXPORT
-	Verbosity current_verbosity_cutoff();
+	Verbosity current_verbosity_cutoff(void);
 
 #if LOGURU_USE_FMTLIB
 	// Internal functions
@@ -862,7 +862,7 @@ namespace loguru
 
 	// Do the output terminal support colors?
 	LOGURU_EXPORT
-	bool terminal_has_color();
+	bool terminal_has_color(void);
 
 	// Colors
 	LOGURU_EXPORT const char* terminal_black();

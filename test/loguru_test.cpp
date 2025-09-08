@@ -14,27 +14,27 @@
 
 #include <fstream>
 
-void the_one_where_the_problem_is(const std::vector<std::string>& v) {
+static void the_one_where_the_problem_is(const std::vector<std::string>& v) {
 	ABORT_F("Abort deep in stack trace, msg: %s", v[0].c_str());
 }
-void deep_abort_1(const std::vector<std::string>& v) { the_one_where_the_problem_is(v); }
-void deep_abort_2(const std::vector<std::string>& v) { deep_abort_1(v); }
-void deep_abort_3(const std::vector<std::string>& v) { deep_abort_2(v); }
-void deep_abort_4(const std::vector<std::string>& v) { deep_abort_3(v); }
-void deep_abort_5(const std::vector<std::string>& v) { deep_abort_4(v); }
-void deep_abort_6(const std::vector<std::string>& v) { deep_abort_5(v); }
-void deep_abort_7(const std::vector<std::string>& v) { deep_abort_6(v); }
-void deep_abort_8(const std::vector<std::string>& v) { deep_abort_7(v); }
-void deep_abort_9(const std::vector<std::string>& v) { deep_abort_8(v); }
-void deep_abort_10(const std::vector<std::string>& v) { deep_abort_9(v); }
+static void deep_abort_1(const std::vector<std::string>& v) { the_one_where_the_problem_is(v); }
+static void deep_abort_2(const std::vector<std::string>& v) { deep_abort_1(v); }
+static void deep_abort_3(const std::vector<std::string>& v) { deep_abort_2(v); }
+static void deep_abort_4(const std::vector<std::string>& v) { deep_abort_3(v); }
+static void deep_abort_5(const std::vector<std::string>& v) { deep_abort_4(v); }
+static void deep_abort_6(const std::vector<std::string>& v) { deep_abort_5(v); }
+static void deep_abort_7(const std::vector<std::string>& v) { deep_abort_6(v); }
+static void deep_abort_8(const std::vector<std::string>& v) { deep_abort_7(v); }
+static void deep_abort_9(const std::vector<std::string>& v) { deep_abort_8(v); }
+static void deep_abort_10(const std::vector<std::string>& v) { deep_abort_9(v); }
 
-void sleep_ms(int ms)
+static void sleep_ms(int ms)
 {
 	LOG_F(3, "Sleeping for %d ms", ms);
 	std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
-void test_thread_names()
+static void test_thread_names(void)
 {
 	LOG_SCOPE_FUNCTION(INFO);
 
@@ -69,7 +69,7 @@ void test_thread_names()
 	c.join();
 }
 
-void test_scopes()
+static void test_scopes(void)
 {
 	LOG_SCOPE_FUNCTION(INFO);
 
@@ -87,7 +87,7 @@ void test_scopes()
 	sleep_ms(64);
 }
 
-void test_levels()
+static void test_levels(void)
 {
 	LOG_SCOPE_FUNCTION(INFO);
 	{
@@ -103,7 +103,7 @@ void test_levels()
 }
 
 #if LOGURU_WITH_STREAMS
-void test_stream()
+static void test_stream(void)
 {
 	LOG_SCOPE_FUNCTION(INFO);
 	LOG_S(INFO) << "Testing stream-logging.";
@@ -120,12 +120,12 @@ void test_stream()
 }
 #endif
 
-int some_expensive_operation() { static int r=31; sleep_ms(132); return r++; }
-const int BAD = 32;
+static int some_expensive_operation(void) { static int r=31; sleep_ms(132); return r++; }
+static const int BAD = 32;
 
-int always_increasing() { static int x = 0; return x++; }
+static int always_increasing(void) { static int x = 0; return x++; }
 
-int main_test(int argc, char* argv[])
+static int main_test(int argc, const char** argv)
 {
 	loguru::init(argc, argv);
 	LOG_SCOPE_FUNCTION(INFO);
@@ -140,23 +140,23 @@ int main_test(int argc, char* argv[])
 	return 0;
 }
 
-void test_SIGSEGV_0()
+static void test_SIGSEGV_0(void)
 {
 	LOG_F(INFO, "Intentionally writing to nullptr:");
 	int* ptr = nullptr;
 	*ptr = 42;
 	LOG_F(FATAL, "We shouldn't get here");
 }
-void test_SIGSEGV_1() { test_SIGSEGV_0(); }
-void test_SIGSEGV_2() { test_SIGSEGV_1(); }
+static void test_SIGSEGV_1() { test_SIGSEGV_0(); }
+static void test_SIGSEGV_2() { test_SIGSEGV_1(); }
 
-void test_abort_0()
+static void test_abort_0(void)
 {
 	LOG_F(INFO, "Calling std::abort");
 	std::abort();
 }
-void test_abort_1() { test_abort_0(); }
-void test_abort_2() { test_abort_1(); }
+static void test_abort_1() { test_abort_0(); }
+static void test_abort_2() { test_abort_1(); }
 
 struct CustomType
 {
@@ -170,7 +170,7 @@ Text ec_to_text(const CustomType* custom)
 }
 } // namespace loguru
 
-void test_error_contex()
+static void test_error_contex(void)
 {
 	{ ERROR_CONTEXT("THIS SHOULDN'T BE PRINTED", "scoped"); }
 	ERROR_CONTEXT("Parent thread value", 42);
@@ -208,17 +208,17 @@ void test_error_contex()
 	}).join();
 }
 
-void test_hang_0()
+static void test_hang_0(void)
 {
 	LOG_F(INFO, "Press ctrl-C to kill.");
 	for(;;) {
 		// LOG_F(INFO, "Press ctrl-C to break out of this infinite loop.");
 	}
 }
-void test_hang_1() { test_hang_0(); }
-void test_hang_2() { test_hang_1(); }
+static void test_hang_1() { test_hang_0(); }
+static void test_hang_2() { test_hang_1(); }
 
-void throw_on_fatal()
+static void throw_on_fatal(void)
 {
 	loguru::set_fatal_handler([](const loguru::Message& message){
 		LOG_F(INFO, "Throwing exception...");
@@ -248,7 +248,7 @@ void throw_on_fatal()
 #endif // LOGURU_WITH_STREAMS
 }
 
-void throw_on_signal()
+static void throw_on_signal(void)
 {
 	loguru::set_fatal_handler([](const loguru::Message& message){
 		LOG_F(INFO, "Throwing exception...");
@@ -272,25 +272,25 @@ struct CallbackTester
 	size_t num_close = 0;
 };
 
-void callbackPrint(void* user_data, const loguru::Message& message)
+static void callbackPrint(void* user_data, const loguru::Message& message)
 {
 	printf("Custom callback: %s%s\n", message.prefix, message.message);
 	reinterpret_cast<CallbackTester*>(user_data)->num_print += 1;
 }
 
-void callbackFlush(void* user_data)
+static void callbackFlush(void* user_data)
 {
 	printf("Custom callback flush\n");
 	reinterpret_cast<CallbackTester*>(user_data)->num_flush += 1;
 }
 
-void callbackClose(void* user_data)
+static void callbackClose(void* user_data)
 {
 	printf("Custom callback close\n");
 	reinterpret_cast<CallbackTester*>(user_data)->num_close += 1;
 }
 
-void test_log_callback()
+static void test_log_callback(void)
 {
 	CallbackTester tester;
 	loguru::add_callback(
@@ -319,7 +319,12 @@ static int winDbgHook(int reportType, char *message, int *)
 
 // ----------------------------------------------------------------------------
 
-int main(int argc, char* argv[])
+#if defined(BUILD_MONOLITHIC)
+#define main loguru_test_main
+#endif
+
+extern "C"
+int main(int argc, const char** argv)
 {
 #ifdef USE_WIN_DBG_HOOK
 	_CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, winDbgHook);
@@ -429,4 +434,5 @@ int main(int argc, char* argv[])
 			LOG_F(ERROR, "Unknown test: '%s'", test.c_str());
 		}
 	}
+	return 0;
 }

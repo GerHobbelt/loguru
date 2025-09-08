@@ -8,17 +8,17 @@
 #define LOGURU_REDEFINE_ASSERT 1
 #include "../loguru.cpp"
 
-const size_t kNumRuns = 10;
-const double kPi = 3.1415926535897932384626433;
+static const size_t kNumRuns = 10;
+static const double kPi = 3.1415926535897932384626433;
 
-static long long now_ns()
+static long long now_ns(void)
 {
 	using namespace std::chrono;
 	return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
 }
 
 template<typename Function>
-void bench(const std::string& name, const Function& function, size_t num_iterations)
+static void bench(const std::string& name, const Function& function, size_t num_iterations)
 {
 	function(num_iterations); // Warm-up.
 
@@ -49,7 +49,7 @@ void bench(const std::string& name, const Function& function, size_t num_iterati
 
 // ----------------------------------------------------------------------------
 
-void format_strings(size_t num_iterations)
+static void format_strings(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		LOG_F(WARNING, "Some long, complex message.");
@@ -57,7 +57,7 @@ void format_strings(size_t num_iterations)
 	loguru::flush();
 }
 
-void format_float(size_t num_iterations)
+static void format_float(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		LOG_F(WARNING, "%+05.3f", kPi);
@@ -65,7 +65,7 @@ void format_float(size_t num_iterations)
 	loguru::flush();
 }
 
-void stream_strings(size_t num_iterations)
+static void stream_strings(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		LOG_S(WARNING) << "Some long, complex message.";
@@ -73,7 +73,7 @@ void stream_strings(size_t num_iterations)
 	loguru::flush();
 }
 
-void stream_float(size_t num_iterations)
+static void stream_float(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		LOG_S(WARNING) << std::setfill('0') << std::setw(5) << std::setprecision(3) << kPi;
@@ -81,7 +81,7 @@ void stream_float(size_t num_iterations)
 	loguru::flush();
 }
 
-void raw_string_float(size_t num_iterations)
+static void raw_string_float(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		RAW_LOG_F(WARNING, "Some long, complex message.");
@@ -89,14 +89,19 @@ void raw_string_float(size_t num_iterations)
 	loguru::flush();
 }
 
-void error_context(size_t num_iterations)
+static void error_context(size_t num_iterations)
 {
 	for (size_t i = 0; i < num_iterations; ++i) {
 		ERROR_CONTEXT("key", "value");
 	}
 }
 
-int main(int argc, char* argv[])
+#if defined(BUILD_MONOLITHIC)
+#define main loguru_benchmark_main
+#endif
+
+extern "C"
+int main(int argc, const char** argv)
 {
 	const size_t kNumIterations = 50 * 1000;
 
@@ -118,4 +123,6 @@ int main(int argc, char* argv[])
 	bench("LOG_S string (unbuffered):", stream_strings,   kNumIterations);
 	bench("LOG_S float  (unbuffered):", stream_float,     kNumIterations);
 	bench("RAW_LOG_F    (unbuffered):", raw_string_float, kNumIterations);
+
+	return 0;
 }

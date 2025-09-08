@@ -7,9 +7,9 @@
 #include <gflags/gflags.h>
 #include <glog/raw_logging.h>
 
-const size_t kNumIterations = 50 * 1000;
-const size_t kNumRuns = 10;
-const double kPi = 3.1415926535897932384626433;
+static const size_t kNumIterations = 50 * 1000;
+static const size_t kNumRuns = 10;
+static const double kPi = 3.1415926535897932384626433;
 
 static long long now_ns()
 {
@@ -18,7 +18,7 @@ static long long now_ns()
 }
 
 template<typename Function>
-double time_sec(const Function& function)
+static double time_sec(const Function& function)
 {
 	auto start_ns = now_ns();
 	function();
@@ -26,7 +26,7 @@ double time_sec(const Function& function)
 }
 
 template<typename Function>
-void bench(const std::string& name, const Function& function)
+static void bench(const std::string& name, const Function& function)
 {
 	function(); // Warm-up
 
@@ -55,7 +55,7 @@ void bench(const std::string& name, const Function& function)
 
 // ----------------------------------------------------------------------------
 
-void stream_strings()
+static void stream_strings(void)
 {
 	for (size_t i = 0; i < kNumIterations; ++i) {
 		LOG(WARNING) << "Some long, complex message.";
@@ -63,7 +63,7 @@ void stream_strings()
 	google::FlushLogFiles(google::GLOG_INFO);
 }
 
-void stream_float()
+static void stream_float(void)
 {
 	for (size_t i = 0; i < kNumIterations; ++i) {
 		LOG(WARNING) << std::setfill('0') << std::setw(6) << std::setprecision(3) << kPi;
@@ -71,7 +71,7 @@ void stream_float()
 	google::FlushLogFiles(google::GLOG_INFO);
 }
 
-void raw_string_float()
+static void raw_string_float(void)
 {
 	for (size_t i = 0; i < kNumIterations; ++i) {
 		RAW_LOG(WARNING, "Some long, complex message.");
@@ -79,6 +79,11 @@ void raw_string_float()
 	google::FlushLogFiles(google::GLOG_INFO);
 }
 
+#if defined(BUILD_MONOLITHIC)
+#define main loguru_glog_benchmark_main
+#endif
+
+extern "C"
 int main(int argc, const char** argv)
 {
     FLAGS_alsologtostderr = true;
@@ -91,4 +96,5 @@ int main(int argc, const char** argv)
     FLAGS_logbufsecs = 0; // Flush all output in realtime
     bench("LOG(WARNING) << string (unbuffered):", stream_strings);
     bench("LOG(WARNING) << float  (unbuffered):", stream_float);
+	return 0;
 }

@@ -266,7 +266,7 @@ namespace loguru
 	// ------------------------------------------------------------------------------
 	// Colors
 
-	bool terminal_has_color() { return s_terminal_has_color; }
+	bool terminal_has_color(void) { return s_terminal_has_color; }
 
 	// Colors
 
@@ -493,7 +493,7 @@ namespace loguru
 		return buff + INDENTATION_WIDTH * (NUM_INDENTATIONS - depth);
 	}
 
-	static void parse_args(int& argc, char* argv[], const char* verbosity_flag)
+	static void parse_args(int& argc, const char** argv, const char* verbosity_flag)
 	{
 		int arg_dest = 1;
 		int out_argc = argc;
@@ -562,7 +562,7 @@ namespace loguru
 
 	// ------------------------------------------------------------------------------
 
-	static void on_atexit()
+	static void on_atexit(void)
 	{
 		VLOG_F(g_internal_verbosity, "atexit");
 		flush();
@@ -609,7 +609,7 @@ namespace loguru
 		}
 	}
 
-	Text errno_as_text()
+	Text errno_as_text(void)
 	{
 	#if defined(__GLIBC__) && defined(_GNU_SOURCE)
 		// GNU Version
@@ -631,7 +631,7 @@ namespace loguru
 	#endif
 	}
 
-	void init(int& argc, char* argv[], const Options& options)
+	void init(int& argc, const char** argv, const Options& options)
 	{
 		CHECK_GT_F(argc,       0,       "Expected proper argc/argv");
 		CHECK_EQ_F(argv[argc], nullptr, "Expected proper argc/argv");
@@ -1038,7 +1038,7 @@ namespace loguru
 		}
 	}
 
-	void remove_all_callbacks()
+	void remove_all_callbacks(void)
 	{
 		std::lock_guard<std::recursive_mutex> lock(s_mutex);
 		for (auto& callback : s_callbacks) {
@@ -1051,7 +1051,7 @@ namespace loguru
 	}
 
 	// Returns the maximum of g_stderr_verbosity and all file/custom outputs.
-	Verbosity current_verbosity_cutoff()
+	Verbosity current_verbosity_cutoff(void)
 	{
 		return g_stderr_verbosity > s_max_out_verbosity ?
 			   g_stderr_verbosity : s_max_out_verbosity;
@@ -1072,7 +1072,7 @@ namespace loguru
 
 #if LOGURU_WINTHREADS
 	// Where we store the custom thread name set by `set_thread_name`
-	char* thread_name_buffer()
+	static char* thread_name_buffer(void)
 	{
 		static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
 		return &thread_name[0];

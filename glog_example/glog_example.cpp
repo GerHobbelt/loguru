@@ -3,6 +3,11 @@
 
 #include "glog_example.hpp"
 
+#if defined(BUILD_MONOLITHIC)
+#define main loguru_glog_example_main
+#endif
+
+extern "C"
 int main(int argc, const char** argv)
 {
     FLAGS_alsologtostderr = true;
@@ -12,4 +17,5 @@ int main(int argc, const char** argv)
     LOG(INFO) << "Hello from main.cpp!";
     complex_calculation();
     LOG(INFO) << "main function about to end!";
+	return 0;
 }
